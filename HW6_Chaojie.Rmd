@@ -1,0 +1,85 @@
+---
+title: "Support Vector Machines(SVMs) Tutorial"
+author: "Sonali Narang"
+date: "11/12/2019"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Homework
+
+1. Choose an appropriate machine learning dataset and use SVM with two different kernels. Campare the results. 
+```{r load relevant libraries, include=FALSE}
+library(caret)
+```
+```{r}
+data(iris)
+iris
+```
+```{r}
+# split the data into training set and testing set
+set.seed(24)
+train_size <- floor(0.75 * nrow(iris))
+train_pos <- sample(seq_len(nrow(iris)), size = train_size)
+train_data <- iris[train_pos, ]
+test_data <- iris[-train_pos, ]
+```
+SVM with Linear Kernel
+```{r}
+svmLinear = train(Species ~ .,  data = train_data, method = "svmLinear")
+svmLinear
+```
+```{r}
+pre.svmLinear <- predict(svmLinear, newdata = test_data)
+confusionMatrix(pre.svmLinear, reference = test_data$Species)
+```
+SVM with Polynomial Kernel
+```{r}
+svmPoly = train(Species ~ .,  data = train_data, method = "svmPoly")
+svmPoly
+```
+```{r}
+pre.svmPoly <- predict(svmLinear, newdata = test_data)
+confusionMatrix(pre.svmPoly, reference = test_data$Species)
+```
+
+Two methods: SVM with Linear Kernel, SVM with Polynomial Kernel
+Both methods show the same results and accuracy. Compare with SVM with Linear Kernel, SVM with Polynomial Kernel can usually give better performance in complicated non-linear data.
+From the results of SVM with Polynomial Kernel, we can see that degree, scale and parameter C will influence the prediction accuracy.
+
+2. Attempt using SVM after using a previously covered feature selection method. Do the results improve? Explain.
+
+Feature Selection Using Wrapper Methods: Recursive Feature Elimination
+The result shows that Petal.Length, Petal.Width are the top 2 variables.
+```{r}
+control = rfeControl(functions = caretFuncs, number = 2)
+results = rfe(iris[,1:4], iris[,5],sizes = c(2,5,9), rfeControl = control, method = "svmLinear")
+results
+```
+SVM with Linear Kernel (Only use the top 2 variables:Petal.Length, Petal.Width)
+```{r}
+svmLinear = train(Species ~ Petal.Length + Petal.Width,  data = train_data, method = "svmLinear")
+svmLinear
+```
+```{r}
+pre.svmLinear <- predict(svmLinear, newdata = test_data)
+confusionMatrix(pre.svmLinear, reference = test_data$Species)
+```
+SVM with Polynomial Kernel (Only use the top 2 variables:Petal.Length, Petal.Width)
+```{r}
+svmPoly = train(Species ~ Petal.Length + Petal.Width,  data = train_data, method = "svmPoly")
+svmPoly
+```
+```{r}
+pre.svmPoly <- predict(svmLinear, newdata = test_data)
+confusionMatrix(pre.svmPoly, reference = test_data$Species)
+```
+
+The results don't improve after feature selection method.
+However, with the feature selection method, we remove half of the features (2 out of 4), the prediction results still show very high accuracy(0.9737 vs 0.9474). 
+With the feature selection method, we can increasing the compute speed without decreasing too much accuracy.
